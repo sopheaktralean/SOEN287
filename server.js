@@ -354,8 +354,8 @@ app.post('/find', (req, res) => {
                     ? cattype === recordBreed.trim()
                     : true;
 
-                const matchesAge = 'Does Not Matter' == petage || recordAge.trim() === petage;
-                const matchesGender = 'Does Not Matter' == !petgender || recordGender.trim() === petgender;
+                const matchesAge = petage === 'Does Not Matter' || recordAge.trim() === petage;
+                const matchesGender = petgender === 'Does Not Matter' || recordGender.trim() === petgender;
                 const matchesFriendliness = !friendliness || recordFriendliness.trim() === friendliness;
 
                 return matchesPetType && matchesBreed && matchesAge && matchesGender && matchesFriendliness;
