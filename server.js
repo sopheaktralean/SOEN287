@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
@@ -5,6 +6,13 @@ const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 4000;
+
+// login.txt: login/signup
+const loginFilePath = path.join(__dirname, process.env.LOGIN_FILE || 'public/data/login.txt');
+// petsinfo.txt : giveaway
+const petsInfoFilePath = path.join(__dirname, process.env.PETSINFO_FILE || 'public/data/petsinfo.txt');
+// pets.txt : find
+const petsFilePath = path.join(__dirname, process.env.PETS_FILE || 'public/data/pets.txt');
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -27,7 +35,7 @@ app.use(session({
 
 // Define routes and other server configurations
 app.get('/', (req, res) => {
-    res.render('home' , { user: req.session.user }); // This will render 'home.ejs' from the 'views' directory
+    res.render('home' , { user: req.session.user });
 });
 
 app.get('/event', (req, res) => {
@@ -130,7 +138,6 @@ app.post('/login', (req, res) => {
         return res.status(400).send('Username and password are required.');
     }
 
-    const loginFilePath = path.join(__dirname, 'public', 'data', 'login.txt');
 
     fs.readFile(loginFilePath, 'utf8', (err, data) => {
         if (err) {
@@ -162,9 +169,6 @@ app.post('/login', (req, res) => {
     });
 });
 
-
-
-
 app.post('/signup', (req, res) => {
     const { username, password, confirmPassword } = req.body;
 
@@ -191,8 +195,6 @@ app.post('/signup', (req, res) => {
             message: 'Passwords do not match.'
         });
     }
-
-    const loginFilePath = path.join(__dirname, 'public', 'data', 'login.txt');
 
     // Read the existing users from the login.txt file
     fs.readFile(loginFilePath, 'utf8', (err, data) => {
@@ -254,9 +256,6 @@ app.post('/giveaway', checkAuthentication, (req, res) => {
         return res.status(400).send('All fields are required.');
     }
 
-    // Define path to 'petsinfo.txt'
-    const petsInfoFilePath = path.join(__dirname, 'public', 'data', 'petsinfo.txt');
-
     // Create a string to write to the file
     const petInfo = `${firstname}, ${lastname}, ${address}, ${email}, ${phonenumber}, ${pettype}, ${cattype || ''}, ${dogtype || ''}, ${age}, ${petgender}, ${friendliness}, ${adaptability}, ${suitability}\n`;
 
@@ -268,20 +267,6 @@ app.post('/giveaway', checkAuthentication, (req, res) => {
     });
 });
 
-// POST route for handling giveaway form submission
-/* app.post('/submitGiveawayForm', checkAuthentication, (req, res) => {
-    const data = req.body;
-
-    const giveawayFilePath = path.join(__dirname, 'public', 'data', 'petsinfo.txt');
-    const entry = `${data.firstname}, ${data.lastname}, ${data.address}, ${data.email}, ${data.phonenumber}, ${data.pettype}, ${data.cattype}, ${data.dogtype}, ${data.age}, ${data.petgender}, ${data.friendliness}, ${data.adaptability}, ${data.suitability}, ${data.description}\n`;
-
-    fs.appendFile(giveawayFilePath, entry, (err) => {
-        if (err) {
-            return res.status(500).send('Server error: Unable to save data.');
-        }
-        res.send('Form submitted successfully!');
-    });
-}); */
 
 app.post('/submitGiveawayForm', (req, res) => {
     const {firstname, lastname, address, email, phonenumber, pettype, cattype, dogtype, age, petgender, friendliness, adaptability, suitability, description } = req.body;
@@ -289,11 +274,8 @@ app.post('/submitGiveawayForm', (req, res) => {
     // Assuming the username is stored in the session:
     const username = req.session.user;
 
-    // Path to the petsinfo.txt file
-    const filePath = path.join(__dirname, 'public', 'data', 'petsinfo.txt');
-
     // Read the existing file to find the current maximum entry number
-    fs.readFile(filePath, 'utf8', (err, data) => {
+    fs.readFile(petsInfoFilePath, 'utf8', (err, data) => {
         if (err && err.code !== 'ENOENT') {
             console.error('Error reading file:', err);
             return res.status(500).send('Server error');
@@ -312,7 +294,7 @@ app.post('/submitGiveawayForm', (req, res) => {
         const petInfo = `${nextEntryNumber}:${username}:${firstname}:${lastname}:${address}:${email}:${phonenumber}:${pettype}:${cattype}:${dogtype}:${age}:${petgender}:${friendliness}:${adaptability}:${suitability}:${description}\n`;
 
         // Append the formatted string to petsinfo.txt
-        fs.appendFile(filePath, petInfo, (err) => {
+        fs.appendFile(petsInfoFilePath, petInfo, (err) => {
             if (err) {
                 console.error('Error writing to file:', err);
                 return res.status(500).send('Server error');
@@ -328,9 +310,9 @@ app.post('/find', (req, res) => {
     const { pettype, dogtype, cattype, petage, petgender, friendliness } = req.body;
     console.log('User Values:', { pettype, dogtype, cattype, petage, petgender, friendliness });
 
-    const petsInfoFilePath = path.join(__dirname, 'public', 'data', 'pets.txt');
+    //const petsFilePath = path.join(__dirname, 'public', 'data', 'pets.txt');
 
-    fs.readFile(petsInfoFilePath, 'utf8', (err, data) => {
+    fs.readFile(petsFilePath, 'utf8', (err, data) => {
         if (err) {
             return res.status(500).send('Server error: Unable to read pets.txt');
         }
@@ -354,8 +336,8 @@ app.post('/find', (req, res) => {
                     ? cattype === recordBreed.trim()
                     : true;
 
-                const matchesAge = petage === 'Does Not Matter' || recordAge.trim() === petage;
-                const matchesGender = petgender === 'Does Not Matter' || recordGender.trim() === petgender;
+                const matchesAge = 'Does Not Matter' === petage || recordAge.trim() === petage;
+                const matchesGender = 'Does Not Matter' === petgender || recordGender.trim() === petgender;
                 const matchesFriendliness = !friendliness || recordFriendliness.trim() === friendliness;
 
                 return matchesPetType && matchesBreed && matchesAge && matchesGender && matchesFriendliness;
@@ -370,7 +352,6 @@ app.post('/find', (req, res) => {
         res.render('findResults', { matches });
     });
 });
-
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
