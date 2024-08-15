@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
@@ -8,11 +7,17 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 // login.txt: login/signup
-const loginFilePath = path.join(__dirname, process.env.LOGIN_FILE || 'public/data/login.txt');
+const loginFilePath = process.env.LOGIN_FILE
+    ? path.resolve(process.env.LOGIN_FILE)
+    : path.join(__dirname, 'public/data/login.txt');
 // petsinfo.txt : giveaway
-const petsInfoFilePath = path.join(__dirname, process.env.PETSINFO_FILE || 'public/data/petsinfo.txt');
+const petsInfoFilePath = process.env.PETSINFO_FILE
+    ? path.resolve(process.env.PETSINFO_FILE)
+    : path.join(__dirname, 'public/data/petsinfo.txt');
 // pets.txt : find
-const petsFilePath = path.join(__dirname, process.env.PETS_FILE || 'public/data/pets.txt');
+const petsFilePath = process.env.PETS_FILE
+    ? path.resolve(process.env.PETS_FILE)
+    : path.join(__dirname, 'public/data/pets.txt');
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
