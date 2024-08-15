@@ -1,13 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if user is logged in (simple check based on a cookie or localStorage)
-    /*const isLoggedIn = localStorage.getItem('loggedIn'); // Or use cookies/session storage
-
-    if (!isLoggedIn) {
-        alert('You must be logged in to access this page.');
-        window.location.href = '/login'; // Redirect to login page if not logged in
-    }*/
-
-    // Existing code for handling form 
     
     fetch('/check-auth', { method: 'GET' })
         .then(response => response.json())
@@ -16,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // If the user is not logged in, redirect to the login page
                 alert('You must be logged in to access this page.');
                 window.location.href = '/login';
+            }
+            else{
+                updateMenuForAuthenticatedUser();
             }
         })
         .catch(error => {
@@ -180,10 +174,11 @@ document.addEventListener('DOMContentLoaded', function() {
           .then(result => {
               alert("Form submitted successfully!");
               window.location.reload();
+              updateMenuForAuthenticatedUser();
           })
           .catch(error => {
               console.error('Error:', error); 
-              alert('An error occurred while submitting the form.');
+              //alert('An error occurred while submitting the form.');
           });
         }
 
@@ -196,3 +191,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     togglePetOptions();
 });
+
+function updateMenuForAuthenticatedUser(){
+    const menuItems = document.querySelectorAll('#sideMenu ul li');
+    menuItems.forEach(item => {
+        const link = item.querySelector('a');
+        if (link && link.href.includes('/login') || link.href.includes('/signup')) {
+            item.style.display = 'none';
+        }
+    });
+
+    const logoutForm = document.createElement('li');
+    logoutForm.innerHTML = `
+        <form id="logoutForm" action="/logout" method="POST" style="display: inline;">
+            <button type="submit" style="background:none;border:none;color:black; font-family: 'Times New Roman', Times, serif; font-size: 18px;">
+                Logout
+            </button>
+        </form>
+    `;
+    document.querySelector('#sideMenu ul').appendChild(logoutForm);
+
+}
